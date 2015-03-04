@@ -1,0 +1,35 @@
+;
+name = Boson
+description = Install Boson Drupal Theme.
+version = VERSION
+core = 7.x
+
+; Install the modules from the standard profile.
+dependencies[] = block
+dependencies[] = color
+dependencies[] = comment
+dependencies[] = contextual
+dependencies[] = dashboard
+dependencies[] = help
+dependencies[] = image
+dependencies[] = list
+dependencies[] = menu
+dependencies[] = number
+dependencies[] = options
+dependencies[] = path
+dependencies[] = php
+dependencies[] = taxonomy
+dependencies[] = dblog
+dependencies[] = shortcut
+dependencies[] = toolbar
+dependencies[] = overlay
+dependencies[] = field_ui
+dependencies[] = file
+dependencies[] = rdf
+
+; Install contributed modules.
+
+files[] = boson.profile
+
+version = "7.0"
+project = "drupal"
