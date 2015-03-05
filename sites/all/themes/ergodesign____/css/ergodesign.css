@@ -1,0 +1,53 @@
+#edit-submitted-nom-complet, #edit-submitted-adresse-courriel{
+width: 89%;
+border: 1px solid #e2e2e2;
+border-top: 1px solid #d4d4d4;
+color: #C1C4C5;
+padding: 7px 12px;
+font-family: 'OpenSansItalic';
+}
+
+
+.language-switcher-locale-url li {
+	display: inline-block;
+	position: relative;
+	margin-top: 12px;
+	padding-left: 6px;
+}
+.language-switcher-locale-url li  a{
+	color: #A2B22F;
+}
+.language-switcher-locale-url li  a:hover{
+	color: #dfdfdf;
+}
+.language-switcher-locale-url li  a.active{
+	color: #dfdfdf;
+}
+.language-switcher-locale-url li  a.active:hover{
+	color: #dfdfdf;
+}
+
+.language-switcher-locale-url{
+	position: relative;
+	font: 13px/20px 'Open Sans';
+	margin: 0;
+	height: 42px;
+	padding: 0;
+}
+
+.wrap-right{
+	height: 42px;
+}
+
+.header{
+	background: #fff;
+}
+
+body, p{
+font-family: 'Karla', sans-serif !important;
+}
+
+h1, h2, h3, h4, h5{
+	font-family: 'Open sans', sans-serif !important;
+	font-weight: 500 !important;
+}

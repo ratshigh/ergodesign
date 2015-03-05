@@ -1,21 +1,17 @@
-;Theme ergodesign
-name = 'ergodesign'
+;Theme Ergodesign
+name = 'Ergodesign'
 description = 'Clean and modern responsive Drupal theme.'
 core = '7.x'
+engine = 'phptemplate'
 screenshot = 'screenshot.png'
-base theme = 'boson'
-
+base theme = boson
 
 ;Stylesheets
 
 ;stylesheets[all][] = 'css/main.css'
-stylesheets[all][] = 'css/turquoise.css'
+stylesheets[all][] = 'css/responsive.css'
 stylesheets[all][] = 'css/ergodesign.css'
-
-
-scripts[] = js/jquery.prettyPhoto.js
-scripts[] = js/main.js
-
+stylesheets[all][] = 'css/turquoise.css'
 
 ;regions[header] = Header
 regions[help] = Help
@@ -49,7 +45,7 @@ regions[footer_fourthcolumn] = Footer fourth column
 regions[footer-a] = Footer a
 regions[footer-b] = Footer b
 
-
+settings[theme_color_palette]  = turquoise
 settings[theme_bg_pattern]  = none
 settings[boson_boxed]  = 0
 
