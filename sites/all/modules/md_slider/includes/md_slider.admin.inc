@@ -169,12 +169,18 @@ function md_slider_configure_form($form, &$form_state, $slid = NULL) {
         '#title' => t('Enable loop'),
         '#default_value' => $settings['loop'],
     );
+  $form['sls_settings']['pause_hover'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Pause on hover'),
+    '#default_value' => $settings['pause_hover'],
+  );
 
     $form['sls_settings']['videobox'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('View video on lightbox'),
-        '#default_value' => $settings['videobox'],
-    );
+    '#type' => 'checkbox',
+    '#title' => t('View video on lightbox'),
+    '#default_value' => $settings['videobox'],
+  );
+
 
     $form['sls_settings']['sls_ldbar'] = array(
         '#type' => 'radios',
@@ -323,6 +329,20 @@ function md_slider_configure_form($form, &$form_state, $slid = NULL) {
         '#title' => t("Generate css file."),
         '#default_value' => $settings['generate_css_file'],
     );
+    $form["sls_settings"]["on_start"] = array(
+        "#type" => "textarea",
+        "#title" => t("TransitionStart callback"),
+        "#default_value" => $settings['on_start'],
+        "#description" => t("Callback function when start change slide.Example: function() {//Code in here}"),
+        "#resizable" => FALSE,
+    );
+    $form["sls_settings"]["on_end"] = array(
+        "#type" => "textarea",
+        "#title" => t("TransitionEnd callback"),
+        "#default_value" => $settings['on_end'],
+        "#description" => t("Callback function when end change slide. Example: function() {//Code in here}"),
+        "#resizable" => FALSE,
+    );
 
     $form['sls_create'] = array(
         '#type' => 'submit',
@@ -354,7 +374,7 @@ function md_slider_configure_form_submit($form, &$form_state) {
     $settings = MDSlider::get_default_settings();
     $custom = $form_state['values'];
 
-    if ($custom['op'] == 'Delete') {
+    if ($custom['op'] == t('Delete')) {
         $form_state['redirect'] = array('admin/structure/md-slider/delete/confirm', array('query' => array('slid' => $custom['sls_id'])));
         return;
     }
@@ -369,6 +389,7 @@ function md_slider_configure_form_submit($form, &$form_state) {
     $settings['bar_position'] = $custom['sls_bar_position'];
     $settings['show_next_prev_button'] = $custom['show_next_prev_button'];
     $settings['auto_play'] = $custom['auto_play'];
+    $settings['pause_hover'] = $custom['pause_hover'];
     $settings['show_bullet'] = $custom['show_bullet'];
     $settings['bullet_position'] = $custom['bullet_position'];
     $settings['show_thumbnail'] = $custom['show_thumbnail'];
@@ -383,6 +404,8 @@ function md_slider_configure_form_submit($form, &$form_state) {
     $settings['dmf_google'] = $custom['dmf_google'];
     $settings['enable_font_css'] = $custom['enable_font_css'];
     $settings['generate_css_file'] = $custom['generate_css_file'];
+    $settings['on_start'] = $custom['on_start'];
+    $settings['on_end'] = $custom['on_end'];
     $settings["videobox"] = $custom["videobox"];
 
     // Create new slider or update existed slider to database
@@ -393,10 +416,10 @@ function md_slider_configure_form_submit($form, &$form_state) {
         $slider->settings = $settings;
         $slider->save();
 
-        if ($custom['op'] == 'Save') {
+        if ($custom['op'] == t('Save')) {
             $form_state['redirect'] = 'admin/structure/md-slider';
         } else {
-            $_GET['destination'] = NULL;
+          unset($_GET['destination']);
             $form_state['redirect'] = 'admin/structure/md-slider/' . $custom['sls_id'] . '/edit';
         }
 
@@ -447,8 +470,7 @@ function theme_md_slider_overview($variables) {
  */
 function md_slider_edit_form($form, &$form_state, $slid) {
     $module_path = drupal_get_path('module', 'md_slider');
-    include_once drupal_get_path('module', 'media') . '/wysiwyg_plugins/media.inc';
-    media_include_browser_js();
+    _md_slider_include_media_browser_js();
 
     drupal_add_library('system', 'ui.tabs');
     drupal_add_library('system', 'ui.sortable');
@@ -457,8 +479,8 @@ function md_slider_edit_form($form, &$form_state, $slid) {
     drupal_add_library('system', 'ui.dialog');
     drupal_add_library('system', 'jquery.cookie');
 
-    drupal_add_js($module_path . '/js/colorpicker/js/colorpicker.js');
-    drupal_add_css($module_path . '/js/colorpicker/css/colorpicker.css');
+    drupal_add_js($module_path . '/js/spectrum/spectrum.js');
+    drupal_add_css($module_path . '/js/spectrum/spectrum.css');
     drupal_add_css($module_path . '/js/preview_transition/css/md-slider.css');
     drupal_add_js($module_path . '/js/preview_transition/js/md-slider-min.js');
     drupal_add_js($module_path . '/js/md-slider-lib.js');
@@ -532,15 +554,15 @@ function get_slide_background() {
     }
 
     if ($fid == -1 || $slid == -1) {
-        $output = '';
-    } else {
+        $output = "";
+    }
+    else {
         $file = file_load($fid);
         $slider = MDSlider::get_by_id($slid);
-        if ($slider->settings['create_bg_imgstyle']) {
+        if ($slider->settings['create_bg_imgstyle'])
             $output = image_style_url("md_slider_{$slid}_bg", $file->uri);
-        } else {
+        else
             $output = file_create_url($file->uri);
-        }
     }
 
     print $output;
@@ -588,15 +610,8 @@ function md_slider_get_youtube_id_from_url($url) {
  * Get video id from url of vimeo link
  */
 function md_slider_get_vimeo_id_from_url($url) {
-    $parsed = parse_url($url);
-    $hostname = $parsed['host']; // WWW.YOUTUBE.COM
-    $vimeo_id_int = '';
-    if ((isset($hostname)) && $hostname == 'vimeo.com') {
-        $arrv = explode('://vimeo.com/', $url); // from ID to end of the string
-        $video_id = substr($arrv[1], 0, 8); // to get video ID
-        $vimeo_id_int = (is_numeric($video_id)) ? (int)$video_id : ''; // ID must be integer
-    }
-    return $vimeo_id_int;
+    preg_match('/(?:vimeo\.com).*\/([0-9]*)/i', $url, $matches);
+    return isset($matches[1])? $matches[1] : "";
 }
 
 /**
@@ -616,12 +631,16 @@ function md_slider_edit_form_submit($form, &$form_state) {
         $slide = (object)$slide;
         $settings = MDSlide::get_default_settings();
         $settings['background_image'] = $slide->itemsetting['background_image'];
+        $settings['background_image_alt'] = $slide->itemsetting['background_image_alt'];
         $settings['timelinewidth'] = $slide->itemsetting['timelinewidth'];
         $settings['custom_thumbnail'] = $slide->itemsetting['custom_thumbnail'];
+        $settings['custom_thumbnail_alt'] = $slide->itemsetting['custom_thumbnail_alt'];
         $settings['transitions'] = $slide->itemsetting['transitions'];
+        $settings['background_color'] = $slide->itemsetting['background_color'];
+        $settings['disabled'] = isset($slide->itemsetting['disabled']) ? $slide->itemsetting['disabled'] : 0;
 
         # Generate css class for layers in slide
-        foreach ($slide->boxitems as $key => $layer) {
+        foreach ($slide->boxitems as $key => &$layer) {
             $css = process_layer_style((object)$layer);
             if ($css != "") {
                 if (isset($layer['link']) && is_array($layer['link']))
@@ -632,7 +651,7 @@ function md_slider_edit_form_submit($form, &$form_state) {
 
             // Generate css for hover link
             if (isset($layer['link']) && is_array($layer['link'])) {
-                $classes[] = ".md-layer-{$slider->slid}-{$index}-{$key} {z-index: {$layer["zindex"]}}";
+                $classes[] = ".md-layer-{$slider->slid}-{$index}-{$key} {z-index: {$layer["zindex"]}!important;}";
                 $css = md_slider_generate_layer_link_css($layer['link']);
                 if ($css != '')
                     if ($layer['type'] != "text")
@@ -640,6 +659,9 @@ function md_slider_edit_form_submit($form, &$form_state) {
                     else
                         $classes[] = ".md-layer-{$slider->slid}-{$index}-{$key} a:hover" . $css;
             }
+
+          if (isset($layer["title"]))
+            $layer["title"] = decode_entities($layer["title"]);
         }
 
         if (($sid = $slide->itemsetting['slide_id']) != -1) {
@@ -655,10 +677,11 @@ function md_slider_edit_form_submit($form, &$form_state) {
     }
 
     # Set redirect form path
-    if ($custom['op'] == 'Save') {
+    if ($custom['op'] == t('Save')) {
         $form_state['redirect'] = 'admin/structure/md-slider';
-    } else {
-        $_GET['destination'] = NULL;
+    }
+    else {
+      unset($_GET['destination']);
     }
 
     # Generate css file
@@ -742,7 +765,7 @@ function confirm_delete_form($form, &$form_state) {
 function confirm_delete_form_submit($form, &$form_state) {
     $custom = $form_state['values'];
 
-    if ($custom['op'] == 'Delete') {
+    if ($custom['op'] == t('Delete')) {
         unset($_GET['destination']);
         if (MDSlider::delete($custom['confirm_del_slid']))
             drupal_set_message(t("MDSlider has been deleted."));
@@ -750,7 +773,8 @@ function confirm_delete_form_submit($form, &$form_state) {
             drupal_set_message(t("MDSlider has been deleted fail."));
 
         $form_state['redirect'] = 'admin/structure/md-slider';
-    } else {
+    }
+    else {
         $form_state['redirect'] = "admin/structure/md-slider/{$custom['confirm_del_slid']}";
     }
 }
@@ -790,7 +814,7 @@ function md_slider_clone($slid) {
     }
 
     # Create image_style for background image
-    if ($clone->settings['use_image_style'])
+    if ($clone->settings['create_bg_imgstyle'])
         update_image_style("md_slider_{$clone->slid}_bg", $clone->settings['width'], $clone->settings['height']);
 
     # Create image style for thumbnail image
@@ -982,7 +1006,6 @@ function md_slider_import_export_form_submit($form, &$form_state) {
  * Callback for export data
  */
 function md_slider_export_data() {
-    $_POST["slids"] = "1";
     if (!isset($_POST['slids']) || $_POST['slids'] == '') {
         print 'Data invalid';
         exit;
@@ -1031,6 +1054,6 @@ function md_slider_get_slides_data($slid, &$slides) {
  * Callback to check machine name of slider
  */
 function md_slider_check_machine_name($machine_name) {
-    return count(MDSlider::get_by_machine_name($machine_name));
+    return (MDSlider::get_by_machine_name($machine_name) != NULL) ? TRUE : FALSE;
 }
 

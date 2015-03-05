@@ -10,15 +10,16 @@
     $options = array();
     $slider = $variables['slider'];
     $variables['slides'] = MDSlide::get_by_slider_id($slider->slid);
-    $settings = $slider->settings;
+    $settings = array_merge(MDSlider::get_default_settings(), $slider->settings);
 
     # Create options for slider
     $options['fullwidth'] = (boolean)$settings['full_width'];
-    $options['transitionsSpeed'] = $settings['transtime'];
+    $options['transitionsSpeed'] = intval($settings['transtime']);
     $options['width'] = $settings['width'];
     $options['height'] = $settings['height'];
     $options['enableDrag'] = (boolean)$settings['touch_swipe'];
     $options['responsive'] = (boolean)$settings['responsive'];
+    $options['pauseOnHover'] = (boolean)$settings['pause_hover'];
     if (isset($settings['loop']))
 	  $options['loop'] = (boolean)$settings['loop'];
     else
@@ -61,41 +62,97 @@
     $data_properties = array();
     $data_properties[] = "data-timeout='{$slide->settings['timelinewidth']}00'";
 
+    // Add data for slide settings thumbnail alt and background image alt
+    if (!isset($slide->settings["background_image_alt"]))
+      $slide->settings["background_image_alt"] = "";
+    if (!isset($slide->settings["custom_thumbnail_alt"]))
+      $slide->settings["custom_thumbnail_alt"] = "";
+
     // Add data transitions for slide
     if (!empty($slide->settings["transitions"]))
       $data_properties[] = 'data-transition="' . implode(",", $slide->settings["transitions"]) . '"';
-    $variables['background_style'] = "";
-    if ($slide->settings['background_image'] != -1) {
-      # Load background image
-      $background = file_load($slide->settings['background_image']);
-      $create_bg_imgs = $variables['slider_settings']['create_bg_imgstyle'];
-      if ($create_bg_imgs) {
-        $variables['background_url'] = image_style_url('md_slider_' . $slide->slid . '_bg', $background->uri);
-      } else {
-        $variables['background_url'] = file_create_url($background->uri);
-      }
 
-      # Load thumbnail image
-      if ($slide->settings['custom_thumbnail'] != -1) {
+    // Process background settings
+    $variables['background_style'] = "";
+    if ($slide->settings['background_image'] != -1 && ($background = file_load($slide->settings['background_image']))) {
+      // Load background image
+      $create_bg_imgs = $variables['slider_settings']['create_bg_imgstyle'];
+      if ($create_bg_imgs)
+        $variables['background_url'] = image_style_url('md_slider_' . $slide->slid . '_bg', $background->uri);
+      else
+        $variables['background_url'] = file_create_url($background->uri);
+
+      // Load thumbnail image
+      $thumb = $background;
+      if ($slide->settings['custom_thumbnail'] != -1)
         $thumb = file_load($slide->settings['custom_thumbnail']);
-      }
-      else {
-        $thumb = $background;
-      }
-      $thumb_url = image_style_url('md_slider_' . $slide->slid . '_thumb', $thumb->uri);
+
+      // Load thumbnail alt
+      $thumb_alt = isset($slide->settings["background_image_alt"]) ? $slide->settings["background_image_alt"] : "";
+      if (isset($slide->settings["custom_thumbnail_alt"]) && $slide->settings["custom_thumbnail_alt"])
+        $thumb_alt = $slide->settings["custom_thumbnail_alt"];
+
+      $thumb_data = drupal_encode_path(image_style_url('md_slider_' . $slide->slid . '_thumb', $thumb->uri));
+      $data_properties[] = "data-thumb-type='image'";
+      $data_properties[] = "data-thumb-alt='{$thumb_alt}'";
     }
     else {
-      $variables['background_style'] = ' style="width: auto; height: auto; max-width: none"';
-      $variables['background_url'] = file_create_url("public://md_slider_def_bg.jpg");
+      // use background color
+      if (!$variables["slider_settings"]["responsive"])
+        $style = array("height: {$variables["slider_settings"]["height"]}px");
+      else
+        $style = array("height: 100%");
+
+      if (!$variables["slider_settings"]["full_width"] && !$variables["slider_settings"]["responsive"])
+        $style[] = "width: {$variables["slider_settings"]["width"]}px";
+      else
+        $style[] = "width: 100%";
+
+      if ($slide->settings["background_color"] != "") {
+        if (strpos($slide->settings["background_color"], "rgba") !== FALSE) {
+          $color = explode(",", $slide->settings["background_color"]);
+          unset($color["3"]);
+          $color = implode(",", $color) . ")";
+          $color = str_replace("rgba", "rgb", $color);
+          $style[] = "background-color: {$color}";
+        }
+        $style[] = "background-color: {$slide->settings["background_color"]}";
+      }
+      $variables['background_style'] = implode("; ", $style);
+
       if ($slide->settings['custom_thumbnail'] != -1) {
         $thumb = file_load($slide->settings['custom_thumbnail']);
-        $thumb_url = image_style_url('md_slider_' . $slide->slid . '_thumb', $thumb->uri);
+        $thumb_data = drupal_encode_path(image_style_url('md_slider_' . $slide->slid . '_thumb', $thumb->uri));
+        $data_properties[] = "data-thumb-type='image'";
+
+        // Process data for thumbnail alt
+        $thumb_alt = "";
+        if (isset($slide->settings["custom_thumbnail_alt"]) && $slide->settings["custom_thumbnail_alt"])
+          $thumb_alt = $slide->settings["custom_thumbnail_alt"];
+        $data_properties[] = "data-thumb-alt='{$thumb_alt}'";
       }
       else {
-        $thumb_url = image_style_url('md_slider_' . $slide->slid . '_thumb', "public://md_slider_def_bg.jpg");
+        $data_properties[] = "data-thumb-type='color'";
+        $thumb_data = array(
+          "height: {$variables["slider_settings"]["thumb_height"]}px",
+          "width: {$variables["slider_settings"]["thumb_width"]}px",
+        );
+
+        if ($slide->settings["background_color"] != "") {
+          if (strpos($slide->settings["background_color"], "rgba") !== FALSE) {
+            $color = explode(",", $slide->settings["background_color"]);
+            unset($color["3"]);
+            $color = implode(",", $color) . ")";
+            $color = str_replace("rgba", "rgb", $color);
+            $thumb_data[] = "background-color: {$color}";
+          }
+          $thumb_data[] = "background-color: {$slide->settings["background_color"]}";
+        }
+
+        $thumb_data = implode("; ", $thumb_data);
       }
     }
-    $data_properties[] = "data-thumb='{$thumb_url}'";
+    $data_properties[] = "data-thumb='{$thumb_data}'";
 
     $variables['data_properties'] = implode(' ', $data_properties);
     $variables['elements_height'] = $variables['slider_settings']['height'];
@@ -107,22 +164,23 @@
   function template_preprocess_front_layers_render(&$variables) {
     $layer = $variables['layer'];
 
+    if (!isset($layer{"title"}))
+      $layer["title"] = "";
+
     # Get image url for image layer
     if ($layer['type'] == 'image') {
-      $layer['file_url'] = '';
+      $layer['url'] = '';
       if (isset($layer['fileid'])) {
         $image = file_load($layer['fileid']);
-        $layer['url'] = file_create_url($image->uri);
+        if ($image)
+          $layer['url'] = file_create_url($image->uri);
       }
     }
 
-
-    if ($layer['type'] == 'video') {
+    if ($layer['type'] == 'video')
       $layer['url'] = md_slider_generate_video_embeded_url($layer['fileid']);
-    }
-
     $variables['data'] = process_element_data($layer);
-    $variables['layer'] = (object)$layer;
+
 
     $class = array('md-object');
     if (isset($layer['style']) && $layer['style'] != 'none') {
@@ -133,11 +191,19 @@
     # Generate layer link
     if (isset($layer['link']) && is_array($layer['link'])) {
       $link = $layer['link'];
-      if (strpos($link['value'], 'http') === FALSE)
+      if (strpos($link['value'], 'http') === FALSE && strpos($link["value"], "#") !== 0)
         $variables["link"] = url($link['value'], array('absolute' => TRUE));
       else
           $variables["link"] = $link['value'];
     }
+    if (isset($layer["opacity"]) && intval($layer["opacity"]) != 100) {
+      $percent = intval($layer["opacity"])/100;
+      $layer["opacity"] = "-ms-filter:'progid:DXImageTransform.Microsoft.Alpha(Opacity={$layer["opacity"]})'; filter: alpha(opacity={$layer["opacity"]}); opacity: {$percent};";
+    }
+    else
+      $layer["opacity"] = "";
+
+    $variables['layer'] = (object)$layer;
   }
 
   /**
@@ -163,22 +229,6 @@
       $output[] = "data-easeout='{$element_full['stopani']}'";
     }
 
-    if (isset($element['paddingtop']) && $element['paddingtop'] > 0) {
-      $output[] = "data-padding-top='{$element_full['paddingtop']}'";
-    }
-
-    if (isset($element['paddingbottom']) && $element['paddingbottom'] > 0) {
-      $output[] = "data-padding-bottom='{$element['paddingbottom']}'";
-    }
-
-    if (isset($element['paddingleft']) && $element['paddingleft'] > 0) {
-      $output[] = "data-padding-left='{$element['paddingleft']}'";
-    }
-
-    if (isset($element['paddingright']) && $element['paddingright'] > 0) {
-      $output[] = "data-padding-right='{$element['paddingright']}'";
-    }
-
     return implode(' ', $output);
   }
 
@@ -188,12 +238,10 @@
 function md_slider_prepare_layers_class($slid, &$slides) {
   foreach ($slides as $slide_index => $slide) {
     foreach ($slide->layers as $layer_index => &$layer) {
-      if (isset($layer['style'])) {
+      if (isset($layer['style']))
         $layer['style'] = implode(' ', array($layer['style'], "md-layer-{$slid}-{$slide_index}-{$layer_index}"));
-      }
-      else {
-        $layer['style'] = "md-layer-{$slid}-{$slide_index}-{$layer_index}";
-      }
+      else
+        $layer["style"] = "md-layer-{$slid}-{$slide_index}-{$layer_index}";
     }
   }
 }

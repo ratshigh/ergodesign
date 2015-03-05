@@ -38,10 +38,10 @@ function template_preprocess_slider_edit_form(&$variables)
 /**
  * Implements hook_preprocess for admin_layers_render theme
  */
-function template_preprocess_admin_layers_render(&$variables)
-{
+function template_preprocess_admin_layers_render(&$variables) {
     $layer = $variables['layer'];
     $data = array();
+
     foreach ($layer as $attr => $value) {
         if ($attr == 'link') {
             $link_val = drupal_json_encode($value);
@@ -59,11 +59,10 @@ function template_preprocess_admin_layers_render(&$variables)
             continue;
         }
         if ($attr == "title")
-          $value = htmlentities($value, ENT_QUOTES);
+          $value = htmlentities($value, ENT_QUOTES, "UTF-8");
         $data[] = "data-{$attr}=\"{$value}\"";
     }
 
-    $data[] = "data-{$attr}='{$value}'";
     $variables['data'] = implode(' ', $data);
 
     if ($layer['type'] == 'image') {
@@ -82,6 +81,17 @@ function template_preprocess_admin_layers_render(&$variables)
     $style[] = "height: {$layer['height']}px;";
     $style[] = "top: {$layer['top']}px;";
     $style[] = "left: {$layer['left']}px;";
+
+    if ($layer["type"] == "text" && isset($layer["fontweight"]) && $layer["fontweight"] != "") {
+        if (is_numeric($layer["fontweight"]) === FALSE) {
+            $font_w = substr($layer["fontweight"], 0, 3);
+            $font_s = substr($layer["fontweight"], 3);
+            $style[] = "font-weight: {$font_w};\n";
+            $style[] = "font-style: {$font_s};\n";
+        }
+        else
+            $style[] = "font-weight: {$layer["fontweight"]};\n";
+    }
     $variables['styles'] = implode(' ', $style);
 }
 
@@ -119,8 +129,7 @@ function get_style_options($file_path)
 /**
  * Implements hook template_preprocess_admin_slides_render()
  */
-function template_preprocess_admin_slides_render(&$variables)
-{
+function template_preprocess_admin_slides_render(&$variables) {
     $slides = $variables['slides'];
     $slider = $variables['slider'];
 
@@ -128,19 +137,21 @@ function template_preprocess_admin_slides_render(&$variables)
     if ($slider->settings['full_width'])
         $variables['class_fullwidth'] = " md-fullwidth";
 
-    $variables['default_bg'] = file_create_url("public://md_slider_def_bg.jpg");
-
     foreach ($slides as &$slide) {
         $slide->settings["slide_id"] = $slide->sid;
-        if ($slide->settings['background_image'] != -1) {
-            $background = file_load($slide->settings['background_image']);
-            if ($slider->settings['create_bg_imgstyle']) {
+        if ($slide->settings['background_image'] != -1 && ($background = file_load($slide->settings['background_image']))) {
+            if ($slider->settings['create_bg_imgstyle'])
                 $slide->background_url = image_style_url('md_slider_' . $slider->slid . '_bg', $background->uri);
-            } else {
+            else
                 $slide->background_url = file_create_url($background->uri);
-            }
-        } else {
-            $slide->background_url = $variables['default_bg'];
         }
+        else
+            $slide->background_url = "";
+
+      $slide->background_style = array("height: {$slider->settings["height"]}px");
+      if (!$slider->settings["full_width"])
+        $slide->background_style[] = "width:{$slider->settings["width"]}px";
+      if (empty($slide->background_url) && isset($slide->settings["background_color"]) && $slide->settings["background_color"] != "")
+        $slide->background_style[] = "background-color: {$slide->settings["background_color"]}";
     }
 }

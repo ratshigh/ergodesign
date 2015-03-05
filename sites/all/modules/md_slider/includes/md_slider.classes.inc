@@ -132,7 +132,7 @@ class MDSlider {
             ->fetchAll(PDO::FETCH_CLASS, 'MDSlider');
 
         if (!count($results)) {
-            return array();
+            return NULL;
         }
 
         # Run object initialize
@@ -144,7 +144,7 @@ class MDSlider {
         }
 
         # Return list menus
-        return $results;
+        return array_shift($results);
     }
 
     public static function get_by_ids($slids) {
@@ -193,6 +193,7 @@ class MDSlider {
             'bar_position' => 'bottom',
             'show_next_prev_button' => 1,
             'auto_play' => 1,
+            'pause_hover' => 1,
             'show_bullet' => 1,
             'bullet_position' => 5,
             'show_thumbnail' => 1,
@@ -208,6 +209,8 @@ class MDSlider {
             'dmf_google' => '',
             'enable_font_css' => 0,
             'generate_css_file' => 0,
+            "on_start" => "",
+            "on_end" => "",
             'color_saved' => 'ff9900,CC0000',
         );
 
@@ -330,7 +333,7 @@ class MDSlide {
     }
 
     public static function get($sid) {
-        $output = NULL;
+        $slide = NULL;
         $results = db_select('md_slides', 'mds')
             ->fields('mds')
             ->condition('sid', $sid)
@@ -348,6 +351,22 @@ class MDSlide {
         return $slide;
     }
 
+  public static function get_all() {
+    $slides = db_select('md_slides', 'mds')
+      ->fields('mds')
+      ->execute()
+      ->fetchAll(PDO::FETCH_CLASS, 'MDSlide');
+
+    foreach ($slides as &$slide) {
+      if ($slide instanceof stdClass)
+        $slide = _md_slider_recast("MDSlide", $slide);
+
+      $slide->initialize();
+    }
+
+    return $slides;
+  }
+
     public static function delete($sid) {
         return db_delete('md_slides')
             ->condition('sid', $sid)
@@ -363,8 +382,10 @@ class MDSlide {
     public static function get_default_settings($key = NULL) {
         static $default_settings = array(
             'background_image' => -1,
+            'background_color' => "",
             'timelinewidth' => 80,
             'custom_thumbnail' => -1,
+            'disabled' => 0,
             "transitions" => array(),
         );
 

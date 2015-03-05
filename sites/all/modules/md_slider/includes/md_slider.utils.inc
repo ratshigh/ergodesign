@@ -87,7 +87,7 @@ function process_layer_style($layer) {
             $output[] = "background: rgb({$rgb[0]}, {$rgb[1]}, {$rgb[2]});background: rgba({$rgb[0]}, {$rgb[1]}, {$rgb[2]}, {$alpha});\n";
         } else {
             if (is_string($layer->backgroundcolor)) {
-                $output[] = "background: #{$layer->backgroundcolor};\n";
+                $output[] = "background: {$layer->backgroundcolor};\n";
             } else {
                 $output[] = "background: #000;\n";
             }
@@ -96,28 +96,20 @@ function process_layer_style($layer) {
 
     // Generate css for z-index of layers
     if (!isset($layer->link) || !is_array($layer->link))
-        $output[] = "z-index: {$layer->zindex};";
-
-    if (isset($layer->opacity) && is_numeric($layer->opacity)) {
-        $opacity = $layer->opacity / 100;
-        $data = "opacity: {$opacity};\n";
-        $data .= '-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=' . $layer->opacity . ')";';
-        $data .= "filter: alpha(opacity={$layer->opacity});\n";
-        $output[] = $data;
-    }
+        $output[] = "z-index: {$layer->zindex} !important;";
 
     # Process style for layer border
     if (isset($layer->borderposition) && isset($layer->borderwidth) && $layer->borderposition > 0 && $layer->borderwidth > 0) {
-        $color = (isset($layer->bordercolor)) ? $layer->bordercolor : "000";
+        $color = (isset($layer->bordercolor)) ? $layer->bordercolor : "#000";
         $border_style = (isset($layer->borderstyle)) ? $layer->borderstyle : "solid";
 
         # Process border layer position
         $positions = process_layer_border_position($layer->borderposition);
         if (count($positions) == 4) {
-            $output[] = "border: {$layer->borderwidth}px {$border_style} #{$color};\n";
+            $output[] = "border: {$layer->borderwidth}px {$border_style} {$color};\n";
         } else {
             foreach ($positions as $position) {
-                $output[] = "border-{$position}: {$layer->borderwidth}px {$border_style} #{$color};\n";
+                $output[] = "border-{$position}: {$layer->borderwidth}px {$border_style} {$color};\n";
             }
         }
     }
@@ -138,13 +130,26 @@ function process_layer_style($layer) {
         $output[] = "-webkit-border-bottom-right-radius: {$layer->borderbottomrightradius}px; -moz-border-radius-bottomright: {$layer->borderbottomrightradius}px; border-bottom-right-radius: {$layer->borderbottomrightradius}px;\n";
     }
 
+    // Process for padding settings
+    if (isset($layer->paddingtop) && $layer->paddingtop > 0)
+      $output[] = "padding-top: {$layer->paddingtop}px !important;\n";
+
+    if (isset($layer->paddingright) && $layer->paddingright > 0)
+      $output[] = "padding-right: {$layer->paddingright}px !important;\n";
+
+    if (isset($layer->paddingbottom) && $layer->paddingbottom > 0)
+      $output[] = "padding-bottom: {$layer->paddingbottom}px !important;\n";
+
+    if (isset($layer->paddingleft) && $layer->paddingleft > 0)
+      $output[] = "padding-left: {$layer->paddingleft}px !important;\n";
+
     # Process styles for text layer
     if ($layer->type == 'text') {
         if (isset($layer->color) && $layer->color != '') {
             if ($layer->color == '0')
                 $output[] = "color: #000 !important;\n";
             else
-                $output[] = "color: #{$layer->color} !important;\n";
+                $output[] = "color: {$layer->color} !important;\n";
         }
 
         if (isset($layer->textalign) && $layer->textalign != '') {
@@ -167,7 +172,7 @@ function process_layer_style($layer) {
         }
 
         if (isset($layer->fontfamily) && $layer->fontfamily != '') {
-            $output[] = "font-family: {$layer->fontfamily};\n";
+            $output[] = "font-family: \"{$layer->fontfamily}\";\n";
         }
 
         if (isset($layer->textdecoration) && $layer->textdecoration != '') {
@@ -216,26 +221,26 @@ function md_slider_generate_layer_link_css($link) {
         if ($link['color'] == '0')
             $output[] = "color: #000 !important;\n";
         else
-            $output[] = "color: #{$link['color']} !important;\n";
+            $output[] = "color: {$link['color']} !important;\n";
     }
 
     if ($link['background'] != '') {
         if ($link['background'] == '0')
             $output[] = "background-color: #000;\n";
         else
-            $output[] = "background-color: #{$link['background']};\n";
+            $output[] = "background-color: {$link['background']};\n";
     }
 
     if ($link['transparent'] != '' && is_numeric($link['transparent'])) {
         $opacity = $link['transparent'] / 100;
-        $output[] = "opacity: {$opacity};\n-ms-filter:\"progid:DXImageTransform.Microsoft.Alpha(Opacity={$link['transparent']})\";\nfilter: alpha(opacity={$link['transparent']});\n";
+        $output[] = "-ms-filter:'progid:DXImageTransform.Microsoft.Alpha(Opacity={$link['transparent']})'; filter: alpha(opacity={$link['transparent']}); opacity: {$opacity};";
     }
 
     if ($link['border'] != '') {
         if ($link['border'] == '0')
             $output[] = "border-color: #000;\n";
         else
-            $output[] = "border-color: #{$link['border']};\n";
+            $output[] = "border-color: {$link['border']};\n";
     }
 
     if (count($output))
@@ -250,10 +255,10 @@ function md_slider_generate_layer_link_css($link) {
 function md_slider_generate_video_embeded_url($video_id) {
     if (strlen($video_id) == 11) {
         # Youtube video
-        return "http://www.youtube.com/embed/{$video_id}";
+        return "https://www.youtube.com/embed/{$video_id}";
     } else {
         # Vimeo video
-        return "http://player.vimeo.com/video/{$video_id}";
+        return "https://player.vimeo.com/video/{$video_id}";
     }
 }
 
@@ -274,4 +279,26 @@ function _md_slider_recast($className, stdClass &$object) {
     $object = (unset) $object;
 
     return $new;
+}
+
+/**
+ * Callback function to include mediaBrowser.js
+ */
+function _md_slider_include_media_browser_js() {
+  static $included;
+  if ($included) {
+    return;
+  }
+  $included = TRUE;
+  module_load_include('inc', 'media', 'includes/media.browser');
+  $javascript = media_browser_js();
+  foreach ($javascript as $key => $definitions) {
+    foreach ($definitions as $definition) {
+      $function = 'drupal_add_' . $key;
+      call_user_func_array($function, $definition);
+    }
+  }
+  // Add wysiwyg-specific settings.
+  $settings = array('wysiwyg_allowed_attributes' => variable_get('media__wysiwyg_allowed_attributes', array('height', 'width', 'hspace', 'vspace', 'border', 'align', 'style', 'class', 'id', 'usemap', 'data-picture-group', 'data-picture-align')));
+  drupal_add_js(array('media' => $settings), 'setting');
 }

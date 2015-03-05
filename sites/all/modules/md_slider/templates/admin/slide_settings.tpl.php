@@ -9,16 +9,39 @@
   <div class="cuteslider-popup clearfix">
     <div id="slide-setting-tabs" class="cs-popup-tabs clearfix">
       <div class="slide-setting clearfix">
-        <h3>Slide settings</h3>
+        <div class="disable-slide">
+          <input id="disable-slide" type="checkbox" name="disable_slide"><label for="disable-slide">Disable this slide</label>
+        </div>
         <div class="choose-image">
           <a class="slide-choose-image-link" href="#">[Choose image]</a>
-          <div id="slide-background-preview"></div>
+          <div id="slide-background-preview" style="position: relative">
+            <img src="" alt="" width="160" height="160">
+            <a class="delete-background" href="#"></a>
+          </div>
+          <div class="custom-bg-alt-info">
+            <label for="custom-bg-alt">Custom background alt</label>
+            <input type="text" name="thumb-alt-tag" id="custom-bg-alt">
+          </div>
         </div>
         <input type="hidden" id="slide-backgroundimage">
+
         <div class="choose-thumbnail">
           <a class="slide-choose-thumbnail-link" href="#">[Choose thumbnail]</a>
-          <div id="slide-thumbnail-preview"></div>
+          <div id="slide-thumbnail-preview" style="position: relative">
+            <img src="" alt="" width="160" height="160">
+            <a class="delete-thumbnail" href="#"></a>
+          </div>
+          <div class="custom-thumb-alt-info">
+            <label for="custom-thumb-alt">Custom thumbnail alt</label>
+            <input type="text" name="thumb-alt-tag" id="custom-thumb-alt">
+          </div>
         </div>
+
+        <div class="choose-slide-bg-color clearfix">
+          <input type="hidden" id="slide-background-color" class="mdt-background mdt-input" value="" name="slide-background-color">
+          <label style="float: left">Background Color</label>
+        </div>
+
         <input type="hidden" id="slide-thumbnail">
       </div><!-- / .slide-setting -->
       <div class="transition">

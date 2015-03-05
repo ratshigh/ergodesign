@@ -185,13 +185,8 @@ ul.md-tabs-head {
     border-radius: 4px 4px 0 0;
     height: 48px;
     overflow: visible;
-    border-bottom: 1px solid #D1D1D1 !important;
     position: relative;
-    background: #fff;
-    background: -webkit-gradient(linear, left top, left bottom, color-stop(40%, #fff), color-stop(100%, #F3F3F3));
-    background: -webkit-linear-gradient(top, #fff 40%, #F3F3F3 100%);
-    background: -moz-linear-gradient(top, #fff 40%, #F3F3F3 100%);
-    background: linear-gradient(top, #fff 40%, #F3F3F3 100%);
+    float: left;
 }
 .md-tabs-head .tab-item.ui-state-active.first, .md-tabs-head .tab-item.ui-state-active.first .tab-link {
     -webkit-border-radius: 0 !important;
@@ -333,6 +328,7 @@ ul.md-tabs-head {
 
 /* md-toolbar */
 .md-toolbar {background:url(../images/toolbar.png) no-repeat 0 0; position: relative; width: 960px; height: 120px; margin: 20px 0 0; font-size: 11px; font-family: Tahoma, Geneva, sans-serif; color: #A5A5A5; z-index: 30;}
+#slide-setting-dlg .mdt-button,
 .md-toolbar .mdt-button {background: url(../images/sprite.png) no-repeat 0 0; position: absolute; top: 6px; width: 22px; height: 20px; display: block}
 .md-toolbar .mdt-button:hover {background-color: #6E6E6E}
 .md-toolbar .mdt-text {background-position: 0 -97px; left: 38px}
@@ -414,6 +410,7 @@ ul.md-tabs-head {
 .md-toolbar .mdt-type-text .mdt-button,
 .md-toolbar .mdt-type-text input.mdt-text{top: -34px}
 
+#slide-setting-dlg .mdt-slide-bgcolor,
 .md-toolbar .mdt-background-color,
 .md-toolbar .mdt-border-color {background-position: -84px -221px; left: 74px; top: 95px; width: 23px}
 .md-toolbar .mdt-background-transparent,
@@ -457,24 +454,39 @@ ul.md-tabs-head {
 .md-toolbar .mdt-addlink:hover,
 .md-toolbar .mdt-addlink.active {background-position: -20px -344px; background-color: none}
 
-.mdt-linkexpand {width: 220px; height:173px; position: absolute; left: 140px; top: 62px; background:url(../images/object-link.png) no-repeat 0 0; z-index:10; display: none;}
+.mdt-linkexpand {width: 220px; height: 218px; position: absolute; left: 140px; top: 62px; background:url(../images/object-link.png) no-repeat 0 0; z-index:10; display: none;}
 	.mdt-link-close {width: 20px; height: 20px; display: block; position: absolute;}
 	.mdt-linkexpand .mdt-link-value,
 	.mdt-linkexpand .mdt-link-title {top: 32px !important; left:48px !important; width:130px !important; height: 20px !important;}
 	.mdt-linkexpand .mdt-link-title {top: 59px !important;}
-	
+
 	.mdt-link-color,
 	.mdt-link-background,
 	.mdt-link-border {background: url(../images/sprite.png) no-repeat -84px -221px; position: absolute; left: 15px; top: 111px; width: 23px; height: 21px; display: block; cursor: pointer}
 	.mdt-link-background {left:62px}
 	.mdt-link-border {left:138px}
-	.link-background-transparent {top: 111px !important; left:91px !important; width:20px !important}
-	
+	.link-background-transparent {top: 113px !important; left:91px !important; width:20px !important}
+
 	.mdt-link-save,
 	.mdt-link-remove {position: absolute; height: 20px; line-height: 20px; border: 1px solid #292929; background:#3A3A3A; top: 144px; left: 15px; padding: 0 8px; color: #A5A5A5}
 	.mdt-link-remove {border: 1px solid #3A3A3A; background:#494949; left: 64px;}
 	.mdt-link-save:hover,
 	.mdt-link-remove:hover {color: #fff;border-color: #000; background:#292929 }
+
+    .mdt-linkexpand .mdt-link-target {
+        top: 86px !important;
+        right: 40px ;
+    }
+    #mdt-linkexpand .link-color-wrap,
+    #mdt-linkexpand .link-background-wrap,
+    #mdt-linkexpand .link-background-transparent,
+    #mdt-linkexpand .link-border-wrap {
+        top: 130px !important;
+    }
+    .mdt-linkexpand .mdt-link-save,
+    .mdt-linkexpand .mdt-link-remove {
+        top: 168px;
+    }
 
 /* item */
 .ui-resizable-e {right: 0;}
@@ -642,7 +654,6 @@ ul.md-tabs-head {
 }
 .ui-widget-overlay {
     position: fixed;
-    z-index:9998;
     top: 0px;
     left: 0px;
     height:100%;
@@ -684,3 +695,88 @@ ul.md-tabs-head {
 
 .form-item-slider-data-save {display: none;}
 
+/* Style for spectrum color */
+#md-toolbar .background-color {position: absolute; left: 70px; top: 93px;}
+#md-toolbar .text-color {position: absolute; left: 790px; top: -34px}
+#md-toolbar .border-color {position: absolute; left: 320px; top: 93px}
+#mdt-linkexpand .link-color-wrap{position: absolute; left: 15px; top: 111px}
+#mdt-linkexpand .link-background-wrap{position: absolute; left: 60px; top: 111px}
+#mdt-linkexpand .link-border-wrap{position: absolute; left: 138px; top: 111px}
+#mdt-linkexpand .link-color-wrap .sp-replacer,
+#mdt-linkexpand .link-background-wrap .sp-replacer,
+#mdt-linkexpand .link-border-wrap .sp-replacer,
+#md-toolbar .text-color .sp-replacer,
+#md-toolbar .border-color .sp-replacer,
+#md-toolbar .background-color .sp-replacer {
+    padding: 0;
+    width: 27px;
+    height: 22px;
+}
+#slide-setting-dlg .sp-replacer {
+    float: left;
+    margin-right: 5px;
+}
+/* Add Tab slide */
+.md-tab-tools {
+    background: #fff;
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(40%, #fff), color-stop(100%, #F3F3F3));
+    background: -webkit-linear-gradient(top, #fff 40%, #F3F3F3 100%);
+    background: -moz-linear-gradient(top, #fff 40%, #F3F3F3 100%);
+    background: linear-gradient(top, #fff 40%, #F3F3F3 100%);
+    border-bottom: 1px solid #D1D1D1 !important;
+    height: 48px;
+}
+.md-tab-tools .add {
+    display: inline-block;
+    font-size: 23px;
+    padding: 17px 22px !important;
+    cursor: pointer;
+    text-decoration: none;
+}
+#slide-setting-dlg a.delete-thumbnail,
+#slide-setting-dlg a.delete-background {
+    text-decoration: none;
+    background: rgba(0, 0, 0, 0.5) url("../images/sprite.png") no-repeat 0 -368px;
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    cursor: pointer;
+}
+
+.disable-slide > label {
+    display: inline;
+    margin-left: 10px;
+}
+
+.choose-image {margin-top:10px; float: left;}
+.choose-slide-bg-color {
+    clear: left;
+}
+.choose-slide-bg-color .sp-replacer {
+    background-color: transparent;
+    border: 0;
+}
+#custom-bg-alt,
+#custom-thumb-alt {
+    border: 1px solid #bbb;
+    height: 20px;
+    padding: 2px;
+    width: 155px
+}
+.choose-slide-bg-color .sp-replacer .sp-dd {
+    display: none;
+}
+.choose-slide-bg-color label {
+    margin-top:5px;
+}
+.choose-slide-bg-color .sp-replacer .spreview {
+    border: 1px solid #E1E2DC;
+}
+.choose-thumbnail {
+    margin-top: 12px;
+}
+.form-item-on-start,
+.form-item-on-end,
+.form-item-dmf-google .form-textarea-wrapper {max-width: 800px}

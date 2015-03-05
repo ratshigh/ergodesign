@@ -92,13 +92,18 @@ function md_slider_schema() {
 }
 
 /**
- * Implements hook_install()
+ * implements hook_field_schema()
  */
-function md_slider_install() {
-  $module_path = drupal_get_path('module', 'md_slider');
-  $default_image = $module_path . '/images/default_bg.jpg';
-  $public_folder = variable_get('file_public_path', conf_path() . '/files');
-  copy($default_image,  $public_folder . '/md_slider_def_bg.jpg');
+function md_slider_field_schema($field) {
+  return array(
+    "columns" => array(
+      "md_slider_id" => array(
+        "type" => "varchar",
+        "length" => 255,
+        "not null" => TRUE,
+      ),
+    ),
+  );
 }
 
 /**
@@ -151,4 +156,76 @@ function md_slider_update_7230() {
     unset($slider->settings["animation"]);
     $slider->save();
   }
+}
+
+/**
+ * implements hook_update_n
+ */
+function md_slider_update_7231() {
+  $fields = md_slider_get_md_slider_fields();
+  foreach ($fields as $field) {
+    $table_prefixes = array(
+      _field_sql_storage_tablename($field),
+      _field_sql_storage_revision_tablename($field)
+    );
+
+    foreach ($table_prefixes as $table) {
+      $field_name = $field["field_name"];
+
+      $column = "{$field_name}_md_slider_id";
+      $spec = array(
+        "type" => "varchar",
+        "length" => 255,
+        "not null" => TRUE
+      );
+      db_change_field($table, $column, $column, $spec);
+    }
+  }
+
+  return t("Change field md_slider_id to varchar");
+}
+
+/**
+ * implements hook_update_N
+ */
+function md_slider_update_7232() {
+  // Load all slides in database
+  $slides = MDSlide::get_all();
+
+  foreach ($slides as $slide) {
+    // Set background color
+    if (!isset($slide->settings["background_color"]))
+      $slide->settings["background_color"] = "";
+
+    if ($slide->settings["background_image"] == -1)
+      $slide->settings["background_color"] = "#32a0b7";
+
+    // Modify item color
+    foreach ($slide->layers as &$layer) {
+      if (isset($layer["backgroundcolor"]) && $layer["backgroundcolor"] != "" && strpos($layer["backgroundcolor"], "#") === FALSE)
+        $layer["backgroundcolor"] = "#{$layer["backgroundcolor"]}";
+
+      if (isset($layer["color"]) && $layer["color"] != "" && strpos($layer["color"], "#") === FALSE)
+        $layer["color"] = "#{$layer["color"]}";
+
+      if (isset($layer["bordercolor"]) && $layer["bordercolor"] != "" && strpos($layer["bordercolor"], "#") === FALSE)
+        $layer["bordercolor"] = "#{$layer["bordercolor"]}";
+
+      if (isset($layer["link"])) {
+        if (isset($layer["link"]["color"]) && $layer["link"]["color"] != "" && strpos($layer["link"]["color"], "#") === FALSE)
+          $layer["link"]["color"] = "#{$layer["link"]["color"]}";
+
+        if (isset($layer["link"]["background"]) && $layer["link"]["background"] != "" && strpos($layer["link"]["background"], "#") === FALSE)
+          $layer["link"]["background"] = "#{$layer["link"]["background"]}";
+
+        if (isset($layer["link"]["border"]) && $layer["link"]["border"] != "" && strpos($layer["link"]["border"], "#") === FALSE)
+          $layer["link"]["border"] = "#{$layer["link"]["border"]}";
+      }
+    }
+
+    // Save slide to update new data
+    $slide->save();
+  }
+
+  return "Update item color properties";
 }

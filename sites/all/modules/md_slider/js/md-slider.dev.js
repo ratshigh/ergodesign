@@ -7,15 +7,15 @@
 (function ($) {
     effectsIn = [
         'bounceIn',
-        'bounceInDown', 
-        'bounceInUp', 
-        'bounceInLeft', 
-        'bounceInRight', 
-        'fadeIn', 
-        'fadeInUp', 
-        'fadeInDown', 
-        'fadeInLeft', 
-        'fadeInRight', 
+        'bounceInDown',
+        'bounceInUp',
+        'bounceInLeft',
+        'bounceInRight',
+        'fadeIn',
+        'fadeInUp',
+        'fadeInDown',
+        'fadeInLeft',
+        'fadeInRight',
         'fadeInUpBig',
         'fadeInDownBig',
         'fadeInLeftBig',
@@ -24,12 +24,11 @@
         'flipInY',
         'foolishIn', //-
         'lightSpeedIn',
-        'puffIn', //-
-        'rollIn',  
-        'rotateIn', 
-        'rotateInDownLeft', 
-        'rotateInDownRight', 
-        'rotateInUpLeft', 
+        'rollIn',
+        'rotateIn',
+        'rotateInDownLeft',
+        'rotateInDownRight',
+        'rotateInUpLeft',
         'rotateInUpRight',
         'twisterInDown', //-
         'twisterInUp', //-
@@ -39,37 +38,36 @@
         'tinLeftIn',  //-
         'tinUpIn',  //-
         'tinDownIn', //-
-        'vanishIn' //-
     ];
     effectsOut = [
         'bombRightOut',  //-
         'bombLeftOut', //-
-        'bounceOut', 
-        'bounceOutDown', 
-        'bounceOutUp', 
-        'bounceOutLeft', 
+        'bounceOut',
+        'bounceOutDown',
+        'bounceOutUp',
+        'bounceOutLeft',
         'bounceOutRight',
-        'fadeOut', 
-        'fadeOutUp', 
-        'fadeOutDown', 
-        'fadeOutLeft', 
-        'fadeOutRight', 
+        'fadeOut',
+        'fadeOutUp',
+        'fadeOutDown',
+        'fadeOutLeft',
+        'fadeOutRight',
         'fadeOutUpBig',
         'fadeOutDownBig',
         'fadeOutLeftBig',
         'fadeOutRightBig',
         'flipOutX',
-        'flipOutY', 
+        'flipOutY',
         'foolishOut', //-
         'hinge',
         'holeOut', //-
         'lightSpeedOut',
         'puffOut',  //-
-        'rollOut',  
-        'rotateOut', 
-        'rotateOutDownLeft', 
+        'rollOut',
+        'rotateOut',
+        'rotateOutDownLeft',
         'rotateOutDownRight',
-        'rotateOutUpLeft', 
+        'rotateOutUpLeft',
         'rotateOutUpRight',
         'rotateDown', //-
         'rotateUp', //-
@@ -108,6 +106,7 @@
             loadingPosition: 'bottom', // choose your loading bar position (top, bottom)
             showArrow: true, // show/hide next, previous arrows
             showBullet: true,
+			videoBox: false,
             showThumb: true, // Show thumbnail, if showBullet = true and showThumb = true, thumbnail will be shown when you hover bullet navigation
             enableDrag: true, // Enable mouse drag
             touchSensitive: 50,
@@ -150,6 +149,9 @@
 
         // init
         function init() {
+            if ("ActiveXObject" in window)
+                $(".md-item-opacity", self).addClass("md-ieopacity");
+
             self.addClass("loading-image");
             var slideClass = '';
             if (options.responsive)
@@ -200,28 +202,48 @@
             }
             $('.md-object', self).hide();
             if($(".md-video", wrap).size() > 0) {
-                var videoCtrl = $('<div class="md-video-control" style="display: none"></div>');
-                wrap.append(videoCtrl);
-                $(".md-video", wrap).click(function() {
-                    var video_ele = $("<iframe></iframe>");
-                    video_ele.attr('allowFullScreen' , '').attr('frameborder' , '0').css({width:"100%", height: "100%", background: "black"});
-                    video_ele.attr("src", $(this).attr("href"));
-                    var closeButton = $('<a href="#" class="md-close-video" title="Close video"></a>');
-                    closeButton.click(function() {
-                        videoCtrl.html("").hide();
-                        play = true;
-                        return false;
-                    });
-                    videoCtrl.html("").append(video_ele).append(closeButton).show();
-                    play = false;
-                    return false;
-                });
+				if(options.videoBox) {
+					$(".md-video", wrap).mdvideobox();
+				} else {
+					var videoCtrl = $('<div class="md-video-control" style="display: none"></div>');
+					wrap.append(videoCtrl);
+					$(".md-video", wrap).click(function() {
+						var video_ele = $("<iframe></iframe>");
+						video_ele.attr('allowFullScreen' , '').attr('frameborder' , '0').css({width:"100%", height: "100%", background: "black"});
+						video_ele.attr("src", $(this).attr("href"));
+						var closeButton = $('<a href="#" class="md-close-video" title="Close video"></a>');
+						closeButton.click(function() {
+							videoCtrl.html("").hide();
+							play = true;
+							return false;
+						});
+						videoCtrl.html("").append(video_ele).append(closeButton).show();
+						play = false;
+						return false;
+					});
+				}
             }
             $(window).resize(function() {
                 resizeWindow();
-            });
+            }).trigger("resize");
             preloadImages();
-            resizeWindow();
+
+            // process when un-active tab
+            var inActiveTime = false;
+            $(window).blur(function(){
+                inActiveTime = (new Date()).getTime();
+            });
+            $(window).focus(function(){
+                if(inActiveTime) {
+                    var duration = (new Date()).getTime() - inActiveTime;
+
+                    if(duration > slideShowDelay - step)
+                        step = slideShowDelay - 200;
+                    else
+                        step += duration;
+                    inActiveTime = false;
+                }
+            });
         }
         function initControl() {
             // Loading bar
@@ -273,22 +295,25 @@
                     var thumbW = parseInt(self.data("thumb-width")),
                         thumbH = parseInt(self.data("thumb-height"));
                     for (var i = 0; i < numItem; i++) {
-                        var thumbSrc = slideItems[i].data("thumb");
+                        var thumbSrc = slideItems[i].data("thumb"),
+                            thumbType = slideItems[i].data("thumb-type"),
+                            thumbAlt = slideItems[i].data("thumb-alt");
                         if(thumbSrc) {
-                            var thumb = $('<img />').attr("src", thumbSrc).css({top: -(9 + thumbH) + "px", left: -(thumbW/2 - 2) + "px", opacity: 0});
+                            var thumb;
+                            if (thumbType == "image")
+                                thumb = $('<img />').attr("src", thumbSrc).attr("alt", slideItems[i].data("thumb-alt")).css({top: -(9 + thumbH) + "px", left: -(thumbW/2 - 2) + "px", opacity: 0})
+                            else
+                                thumb = $("<span></span>").attr("style", thumbSrc).css({top: -(9 + thumbH) + "px", left: -(thumbW/2 - 2) + "px", opacity: 0});
                             $('div.md-bullet:eq(' + i + ')', buttons).append(thumb).append('<div class="md-thumb-arrow" style="opacity: 0"></div>');
                         }
                     }
                     $('div.md-bullet', buttons).hover(function () {
                         $(this).addClass('md_hover');
-                        var img = $("img", this);
-                        if(img.length) {
-                            img.show().animate({'opacity':1},200);
-                            $('.md-thumb-arrow', this).show().animate({'opacity':1}, 200);
-                        }
+                        $("img, span", this).show().animate({'opacity':1},200);
+                        $('.md-thumb-arrow', this).show().animate({'opacity':1}, 200);
                     }, function () {
                         $(this).removeClass('md_hover');
-                        $('img', this).animate({'opacity':0}, 200,function(){
+                        $('img, span', this).animate({'opacity':0}, 200,function(){
                             $(this).hide();
                         });
                         $('.md-thumb-arrow',this).animate({'opacity':0},200,function(){
@@ -307,10 +332,17 @@
                 var thumbDiv = $('<div class="md-thumb"><div class="md-thumb-container"><div class="md-thumb-items"></div></div></div>').appendTo(wrap);
                 slideThumb =  $(".md-thumb-items", thumbDiv);
                 for (var i = 0; i < numItem; i++) {
-                    var thumbSrc = slideItems[i].data("thumb");
+                    var thumbSrc = slideItems[i].data("thumb"),
+                        thumbType = slideItems[i].data("thumb-type"),
+                        thumbAlt = slideItems[i].data("thumb-alt");
+
                     if(thumbSrc) {
-                        var link = $('<a class="md-thumb-item" />').attr("rel", i).append($('<img />').attr("src", thumbSrc));
-                        slideThumb.append(link);
+                        var $link = $('<a class="md-thumb-item" />').attr("rel", i);
+                        if (thumbType == "image")
+                            $link.append($('<img />').attr("src", thumbSrc).attr("alt", slideItems[i].data("thumb-alt")))
+                        else
+                            $link.append($('<span />').attr("style", thumbSrc).css("display", "inline-block"));
+                        slideThumb.append($link);
                     }
                 }
                 $("a", slideThumb).click(function() {
@@ -430,8 +462,44 @@
                 slideThumb.unbind("touchmove");
                 slideThumb.unbind("touchmove");
                 slideThumb.css("left", 0);
-                var thumbsWidth = $("a", slideThumb).width() * numItem;
-                var thumbDiv = slideThumb.parent().parent();
+                var thumbsWidth = 0,
+                    thumbDiv = slideThumb.parent().parent();
+
+                $("a.md-thumb-item", slideThumb).each(function() {
+
+                    if ($("img", $(this)).length > 0) {
+                        if ($("img", $(this)).css("borderLeftWidth"))
+                            thumbsWidth += parseInt($("img", $(this)).css("borderLeftWidth"), 10);
+                        if ($("img", $(this)).css("borderRightWidth"))
+                            thumbsWidth += parseInt($("img", $(this)).css("borderRightWidth"), 10);
+                        if ($("img", $(this)).css("marginLeft"))
+                            thumbsWidth += parseInt($("img", $(this)).css("marginLeft"), 10);
+                        if ($("img", $(this)).css("marginRight"))
+                            thumbsWidth += parseInt($("img", $(this)).css("marginRight"), 10);
+
+                    }
+                    else {
+                        if ($("span", $(this)).css("borderLeftWidth"))
+                            thumbsWidth += parseInt($("span", $(this)).css("borderLeftWidth"), 10);
+                        if ($("span", $(this)).css("borderRightWidth"))
+                            thumbsWidth += parseInt($("span", $(this)).css("borderRightWidth"), 10);
+                        if ($("span", $(this)).css("marginLeft"))
+                            thumbsWidth += parseInt($("span", $(this)).css("marginLeft"), 10);
+                        if ($("span", $(this)).css("marginRight"))
+                            thumbsWidth += parseInt($("span", $(this)).css("marginRight"), 10);
+                    }
+
+                    if ($(this).css("borderLeftWidth"))
+                        thumbsWidth += parseInt($(this).css("borderLeftWidth"), 10);
+                    if ($(this).css("borderRightWidth"))
+                        thumbsWidth += parseInt($(this).css("borderRightWidth"), 10);
+                    if ($(this).css("marginLeft"))
+                        thumbsWidth += parseInt($(this).css("marginLeft"), 10);
+                    if ($(this).css("marginRight"))
+                        thumbsWidth += parseInt($(this).css("marginRight"), 10);
+
+                    thumbsWidth += parseInt(self.data("thumb-width"));
+                });
 
                 $(".md-thumb-next", thumbDiv).remove();
                 $(".md-thumb-prev", thumbDiv).remove();
@@ -665,25 +733,32 @@
             if(index < 0 && options.loop) {
                 index = numItem - 1;
                 slide(index);
-            } else if(index >= 0) {
+            }
+            else if(index >= 0) {
                 slide(index);
             }
         }
         function endMoveCaption(caption) {
+            var easeout = (caption.data("easeout")) ? caption.data("easeout") : "",
+                ieVersion = (!! window.ActiveXObject && +(/msie\s(\d+)/i.exec(navigator.userAgent)[1])) || NaN;
+
+            if (ieVersion != NaN)
+                ieVersion = 11;
+            else
+                ieVersion = parseInt(ieVersion);
+
             clearTimeout(caption.data('timer-start'));
-            if ($.browser.msie && parseInt($.browser.version) <= 9) {
+            if (easeout != "" && easeout != "keep" && ieVersion <= 9)
                 caption.fadeOut();
-            } else {
+            else {
                 caption.removeClass(effectsIn.join(' '));
-                var easeout = caption.data("easeout");
-                if(easeout) {
+                if(easeout != "") {
                     if(easeout == "random")
                         easeout = effectsOut[Math.floor(Math.random() * e_out_length)];
                     caption.addClass(easeout);
-
-                } else {
-                    caption.hide();
                 }
+                else
+                    caption.hide();
             }
         }
         function removeTheCaptions(oItem) {
@@ -699,7 +774,14 @@
                 var caption = $(this);
                 if(caption.data("easeout"))
                     caption.removeClass(effectsOut.join(' '));
-                var easein = caption.data("easein") ? caption.data("easein") : "";
+                var easein = caption.data("easein") ? caption.data("easein") : "",
+                    ieVersion = (!! window.ActiveXObject && +(/msie\s(\d+)/i.exec(navigator.userAgent)[1])) || NaN;
+
+                if (ieVersion != NaN)
+                    ieVersion = 11;
+                else
+                    ieVersion = parseInt(ieVersion);
+
                 if(easein == "random")
                     easein = effectsIn[Math.floor(Math.random() * e_in_length)];
 
@@ -707,16 +789,14 @@
                 caption.hide();
                 if(caption.data("start") != undefined) {
                     caption.data('timer-start', setTimeout(function() {
-                        if (easein == "" || ($.browser.msie && parseInt($.browser.version) <= 9)) {
+                        if (easein != "" && ieVersion <= 9)
                             caption.fadeIn();
-                        } else {
+                        else
                             caption.show().addClass(easein);
-                        }
-
                     }, caption.data("start")));
-                } else {
-                    caption.show().addClass(easein);
                 }
+                else
+                    caption.show().addClass(easein);
 
                 if(caption.data("stop") != undefined) {
                     caption.data('timer-stop', setTimeout(function() {
@@ -738,11 +818,15 @@
         // Add strips
         function addStrips(vertical, opts) {
             var strip,
-                opts = (opts) ? opts : options;;
-            var stripsContainer = $('<div class="md-strips-container"></div>');
-            var stripWidth = Math.round(slideWidth / opts.strips),
+                opts = (opts) ? opts : options,
+                stripsContainer = $('<div class="md-strips-container"></div>'),
+                stripWidth = Math.round(slideWidth / opts.strips),
                 stripHeight = Math.round(slideHeight / opts.strips),
                 $image = $(".md-mainimg img", slideItems[activeIndex]);
+
+            if ($image.length == 0)
+                $image = $(".md-mainimg", slideItems[activeIndex]);
+
             for (var i = 0; i < opts.strips; i++) {
                  var top = ((vertical) ? (stripHeight * i) + 'px' : '0px'),
                      left = ((vertical) ? '0px' : (stripWidth * i) + 'px'),
@@ -777,6 +861,10 @@
             var tileWidth = slideWidth / x,
                 tileHeight = slideHeight / y,
                 $image = $(".md-mainimg img", slideItems[index]);
+
+            if ($image.length == 0)
+                $image = $(".md-mainimg", slideItems[index]);
+
             for(var i = 0; i < y; i++) {
                 for(var j = 0; j < x; j++) {
                     var top = (tileHeight * i) + 'px',
@@ -798,8 +886,21 @@
         // Add strips
         function addStrips2() {
             var strip,
-                images = [$(".md-mainimg img", slideItems[oIndex]), $(".md-mainimg img", slideItems[activeIndex])];
-            var stripsContainer = $('<div class="md-strips-container"></div>');
+                images = [],
+                stripsContainer = $('<div class="md-strips-container"></div>');
+
+            $(".md-mainimg img", slideItems[oIndex]), $(".md-mainimg img", slideItems[activeIndex])
+
+            if ($(".md-mainimg img", slideItems[oIndex]).length > 0)
+                images.push($(".md-mainimg img", slideItems[oIndex]));
+            else
+                images.push($(".md-mainimg", slideItems[oIndex]));
+
+            if ($(".md-mainimg img", slideItems[activeIndex]).length > 0)
+                images.push($(".md-mainimg img", slideItems[activeIndex]));
+            else
+                images.push($(".md-mainimg", slideItems[activeIndex]));
+
             for (var i = 0; i < 2; i++) {
                 strip = $('<div class="mdslider-strip"></div>').css({
                     width: slideWidth,
@@ -812,12 +913,14 @@
         // Add strips
         function addSlits(fx) {
             var $stripsContainer = $('<div class="md-strips-container ' + fx + '"></div>'),
-                $image = $(".md-mainimg img", slideItems[oIndex]),
+                $image = ($(".md-mainimg img", slideItems[oIndex]).length > 0) ? $(".md-mainimg img", slideItems[oIndex]) : $(".md-mainimg", slideItems[oIndex]),
                 $div1 = $('<div class="mdslider-slit"/>').append($image.clone()),
+                $div2 = $('<div class="mdslider-slit"/>'),
                 position = $image.position();
-                $div2 = $('<div class="mdslider-slit"/>').append($image.clone().css("top", position.top - (slideHeight/2) + "px"));
-                if(fx == "slit-vertical-down" || fx == "slit-vertical-up")
-                    $div2 = $('<div class="mdslider-slit"/>').append($image.clone().css("left", position.left - (slideWidth/2) + "px"));
+
+            $div2.append($image.clone().css("top", position.top - (slideHeight/2) + "px"));
+            if(fx == "slit-vertical-down" || fx == "slit-vertical-up")
+                $div2 = $('<div class="mdslider-slit"/>').append($image.clone().css("left", position.left - (slideWidth/2) + "px"));
 
             $stripsContainer.append($div1).append($div2);
             self.append($stripsContainer);
@@ -1213,12 +1316,13 @@
         function resizeWindow() {
             wrap.width();
             slideWidth = options.responsive ? wrap.width() : options.width;
-            if(options.responsive && (slideWidth < options.width)) {
-                slideHeight =  Math.round(slideWidth / options.width * options.height);
-
-            } else {
-                slideHeight = options.height;
+            if(options.responsive) {
+                if (options.fullwidth && slideWidth > options.width)
+                    slideHeight = options.height;
+                else
+                    slideHeight =  Math.round(slideWidth/options.width * options.height);
             }
+
             if(!options.responsive && !options.fullwidth)
                 wrap.width(slideWidth);
             if(!options.responsive && options.fullwidth)
@@ -1235,6 +1339,7 @@
                 $(".md-objects", self).width(slideWidth);
             wrap.height(slideHeight);
             $(".md-slide-item", self).height(slideHeight);
+
             resizeBackgroundImage();
             resizeThumbDiv();
             resizeFontSize();
@@ -1244,12 +1349,16 @@
         function resizeBackgroundImage() {
             $(".md-slide-item", self).each(function() {
                 var $background = $(".md-mainimg img", this);
-                if($background.data("defW") && $background.data("defH")) {
-                    var width = $background.data("defW"),
-                        height = $background.data("defH");
-                    changeImagePosition($background, width, height);
 
+                if ($background.length == 1) {
+                    if($background.data("defW") && $background.data("defH")) {
+                        var width = $background.data("defW"),
+                            height = $background.data("defH");
+                        changeImagePosition($background, width, height);
+                    }
                 }
+                else
+                    $(".md-mainimg", $(this)).width($(".md-slide-item:visible", self).width()).height($(".md-slide-item:visible", self).height())
             });
         }
         function preloadImages() {
@@ -1315,7 +1424,7 @@
         }
         function resizePadding() {
             if (wrap.width() < options.width && options.responsive) {
-                $(".md-objects > div", self).each(function() {
+                $(".md-objects div.md-object", self).each(function() {
                     var objectRatio = wrap.width() / options.width,
                         $_object = $(this),
                         objectPadding = [];
@@ -1331,7 +1440,7 @@
 
                 })
             } else {
-                $(".md-objects > div", self).each(function() {
+                $(".md-objects div.md-object", self).each(function() {
                     var $_object = $(this),
                         objectPadding = [];
                     if ($_object.data('padding-top')) objectPadding['padding-top'] = $_object.data('padding-top');
@@ -1365,7 +1474,10 @@
             var dimensions = {height: newImg.height, width: newImg.width};
             return dimensions;
         }
-        init();
+
+        $(document).ready(function() {
+            init();
+        })
     }
     $.fn.reverse = [].reverse;
     //Image Preloader Function
@@ -1409,5 +1521,67 @@
             this.bAbort = true;
             this.oImagePreload.OnComplete()
         }
+    }
+    $.fn.mdvideobox = function (opt) {
+        $(this).each(function() {
+            function init() {
+                if($("#md-overlay").length == 0) {
+                    var  _overlay = $('<div id="md-overlay" class="md-overlay"></div>').hide().click(closeMe);
+                    var _container = $('<div id="md-videocontainer" class="md-videocontainer"><div id="md-video-embed"></div><div class="md-description clearfix"><div class="md-caption"></div><a id="md-closebtn" class="md-closebtn" href="#"></a></div></div>');
+                    _container.css({'width': options.initialWidth + 'px', 'height': options.initialHeight + 'px', 'display': 'none'});
+                    $("#md-closebtn", _container).click(closeMe);
+                    $("body").append(_overlay).append(_container);
+                }
+                overlay = $("#md-overlay");
+                container = $("#md-videocontainer");
+                videoembed = $("#md-video-embed", container);
+                caption = $(".md-caption", container);
+                element.click(activate);
+            }
+
+            function closeMe()
+            {
+                overlay.fadeTo("fast", 0, function(){$(this).css('display','none')});
+                videoembed.html('');
+                container.hide();
+                return false;
+            }
+
+            function activate()
+            {
+                options.click.call();
+                overlay.css({'height': $(window).height()+'px'});
+                var top = ($(window).height() / 2) - (options.initialHeight / 2);
+                var left = ($(window).width() / 2) - (options.initialWidth / 2);
+                container.css({top: top, left: left}).show();
+                videoembed.css({'background': '#fff url(css/loading.gif) no-repeat center', 'height': options.contentsHeight, 'width': options.contentsWidth});
+                overlay.css('display','block').fadeTo("fast", options.defaultOverLayFade);
+                caption.html(title);
+                videoembed.fadeIn("slow",function() { insert(); });
+                return false;
+            }
+
+            function insert()
+            {
+                videoembed.css('background','#fff');
+                embed = '<iframe src="' + videoSrc + '" width="' + options.contentsWidth + '" height="' + options.contentsHeight + '" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>';
+                videoembed.html(embed);
+            }
+
+            var options = $.extend({
+                initialWidth: 640,
+                initialHeight: 400,
+                contentsWidth: 640,
+                contentsHeight: 350,
+                defaultOverLayFade: 0.8,
+                click: function() {}
+            }, opt);
+            var overlay, container, caption, videoembed, embed;
+            var element = $(this);
+            var videoSrc = element.attr("href");
+            var title = element.attr("title");
+            //lets start it
+            init();
+        });
     }
 })(jQuery);
