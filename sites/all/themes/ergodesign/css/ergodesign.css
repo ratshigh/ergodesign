@@ -6,6 +6,57 @@ color: #C1C4C5;
 padding: 7px 12px;
 font-family: 'OpenSansItalic';
 }
+/*
+.region-slider{
+	max-width: 1010px;
+	margin: auto;
+}
+*/
+
+.logo-img, .logo-img img{
+	padding:0;
+	max-height: 80px;
+}
+.logo-img img{
+	padding-top: 8px;
+}
+
+.header, .header .layout, .b-search-form, .b-search-form .input-wrap, .region-search-box, #block-search-form, #block-search-form .content, #search-block-form{
+	height: 100px;
+}
+#superfish-1, #superfish-1 li, #superfish-1 li a{
+	height:100px;
+	line-height:100px;
+	text-transform: uppercase;
+}
+#superfish-1{
+	float: right;
+}
+
+
+
+#block-md-slider-slider-ergodesign{
+	z-index: 100;
+}
+
+#block-search-form .container-inline, #block-search-form .icon-search{
+	padding-top: 10px;
+}
+
+.page-home-1 .content.shortcodes, .page-home-2 .content.shortcodes, .page-home-3 .content.shortcodes{
+	background:#fff;
+	border-bottom:none;
+}
+
+.page-home-1 .content.shortcodes .layout, .page-home-2 .content.shortcodes .layout, .page-home-3 .content.shortcodes .layout{
+	border-bottom:1px solid #e4e4e4;
+}
+
+
+
+
+
+
 
 
 .language-switcher-locale-url li {
@@ -29,7 +80,7 @@ font-family: 'OpenSansItalic';
 
 .language-switcher-locale-url{
 	position: relative;
-	font: 13px/20px 'Open Sans';
+	font: 13px/20px 'Lato';
 	margin: 0;
 	height: 42px;
 	padding: 0;
@@ -44,10 +95,30 @@ font-family: 'OpenSansItalic';
 }
 
 body, p{
-font-family: 'Karla', sans-serif !important;
+font-family: 'Lato', sans-serif !important;
+font-size: 15px;
+line-height: 22px;
+}
+.menu a{
+	font-family: 'Lato', sans-serif;
+}
+
+.iconok, .iconok li,.work-name a{
+	font-family: 'Lato', sans-serif !important;
+font-size: 15px;
+line-height: 22px;
+}
+
+.copy{
+	line-height: 64px;
+}
+
+h3{
+	font-size: 20px;
 }
 
 h1, h2, h3, h4, h5{
-	font-family: 'Open sans', sans-serif !important;
+	font-family: 'Oswald', sans-serif !important;
+	/*font-family: 'Open sans', sans-serif !important;*/
 	font-weight: 500 !important;
 }

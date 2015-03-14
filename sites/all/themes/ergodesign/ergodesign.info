@@ -9,9 +9,9 @@ base theme = boson
 ;Stylesheets
 
 ;stylesheets[all][] = 'css/main.css'
-stylesheets[all][] = 'css/responsive.css'
 stylesheets[all][] = 'css/ergodesign.css'
 stylesheets[all][] = 'css/turquoise.css'
+stylesheets[all][] = 'css/responsive.css'
 
 ;regions[header] = Header
 regions[help] = Help
@@ -25,7 +25,6 @@ regions[main_menu] = Main Menu
 regions[search_box] = Search Box
 
 regions[slider] = Slider
-regions[featured] = Featured
 regions[top_content] = Top Content
 
 regions[content] = Content
